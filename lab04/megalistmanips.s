@@ -65,42 +65,40 @@ map:
     # also keep in mind that we should not make ANY assumption on which registers
     # are modified by the callees, even when we know the content inside the functions
     # we call. this is to enforce the abstraction barrier of calling convention.
-
-        lw t1, 0(s0)
-        lw t2, 4(s0)
-        addi t1, t1, -4
 mapLoop:
-        addi t1, t1, 4      # offset the array address by the count
-        lw a0, 0(t1)        # load the value at that address into a0
-        #prologue
-        addi sp, sp , -12
-        sw t0, 0(sp)
-        sw t1, 4(sp)
-        sw t2, 8(sp)
-        jalr s1             # call the function on that value.
+    lw t1, 0(s0)		# modify: (address not value)load the address of the array of current node into t1
+	lw	t2, 4(s0)		# load the size of the node's array into t2 
+	add t2, t2, t2      # new code: address = 4 * int
+	add t2, t2, t2
+	add	t1, t1, t0		# offset the array address by the count 
+	lw	a0, 0(t1)		# load the value at that address into a0 
 
-        # epologue
-        lw t0, 0(sp)
-        lw t1, 4(sp)
-        lw t2, 8(sp)
-        addi sp, sp, 12
+	addi sp, sp, -12    # new code: t0-2's value can't be real modified when func be called
+	sw t0, 0(sp)
+	sw t1, 4(sp)
+	sw t2, 8(sp)
 
-        sw a0, 0(t1)        # store the returned value back into the array
-        addi t0, t0, 1      # increment the count
-        bne t0, t2, mapLoop # repeat if we haven't reached the array size yet
+	jalr	s1			# call the function on that value. 
 
-        # la a0, 8(s0)        # load the address of the next node into a0
-        lw a0, 8(s0)
+	lw t2, 8(sp)
+	lw t1, 4(sp)
+	lw t0, 0(sp)
+	addi sp, sp, 12
 
-        # lw a1, 0(s1)        # put the address of the function back into a1 to prepare for the recursion
-        mv a1, s1
-
-        jal  map            # recurse
+	sw	a0, 0(t1)		# store the returned value back into the array 
+	addi	t0, t0, 4		# modify(address is 4): increment the count
+	bne	t0, t2, mapLoop	# repeat if we haven't reached the array size yet 
+	 
+	lw	a0, 8(s0)		# load the address of the next node into a0
+	add a1, x0, s1		# modify: put the address of the function back into a1 to prepare for the recursion
+	 
+	jal 	map			# recurse 
 done:
     lw s0, 8(sp)
     lw s1, 4(sp)
     lw ra, 0(sp)
     addi sp, sp, 12
+    jr ra
 
 print_newline:
     li a1, '\n'
