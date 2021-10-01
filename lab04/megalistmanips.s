@@ -65,34 +65,27 @@ map:
     # also keep in mind that we should not make ANY assumption on which registers
     # are modified by the callees, even when we know the content inside the functions
     # we call. this is to enforce the abstraction barrier of calling convention.
+    #Size of the node (struct) is 4 bytes long
 mapLoop:
-    lw t1, 0(s0)		# modify: (address not value)load the address of the array of current node into t1
-	lw	t2, 4(s0)		# load the size of the node's array into t2 
-	add t2, t2, t2      # new code: address = 4 * int
-	add t2, t2, t2
-	add	t1, t1, t0		# offset the array address by the count 
-	lw	a0, 0(t1)		# load the value at that address into a0 
+    #add t1, s0, x0 
+    lw t3 0(s0)	# load the address of the array of current node into t1
+    lw t2, 4(s0)        # load the size of the node's array into t2
 
-	addi sp, sp, -12    # new code: t0-2's value can't be real modified when func be called
-	sw t0, 0(sp)
-	sw t1, 4(sp)
-	sw t2, 8(sp)
+    #add t1, t1, t0
+    slli t4, t0, 2     # offset the array address by the count
+    add	t3, t3, t4 
+    lw a0, 0(t3)        # load the value at that address into a0
 
-	jalr	s1			# call the function on that value. 
+    jalr s1             # call the function on that value.
 
-	lw t2, 8(sp)
-	lw t1, 4(sp)
-	lw t0, 0(sp)
-	addi sp, sp, 12
+    sw a0, 0(t3)     # store the returned value back into the array
+    addi t0, t0, 1      # increment the count
+    bne t0, t2, mapLoop # repeat if we haven't reached the array size yet
 
-	sw	a0, 0(t1)		# store the returned value back into the array 
-	addi	t0, t0, 4		# modify(address is 4): increment the count
-	bne	t0, t2, mapLoop	# repeat if we haven't reached the array size yet 
-	 
-	lw	a0, 8(s0)		# load the address of the next node into a0
-	add a1, x0, s1		# modify: put the address of the function back into a1 to prepare for the recursion
-	 
-	jal 	map			# recurse 
+    lw a0, 8(s0)        # load the address of the next node into a0
+    add a1, s1, x0        # put the address of the function back into a1 to prepare for the recursion
+
+    jal  map            # recurse
 done:
     lw s0, 8(sp)
     lw s1, 4(sp)
