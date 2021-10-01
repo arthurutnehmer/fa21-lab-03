@@ -72,7 +72,6 @@ map:
 mapLoop:
         addi t1, t1, 4      # offset the array address by the count
         lw a0, 0(t1)        # load the value at that address into a0
-
         #prologue
         addi sp, sp , -12
         sw t0, 0(sp)
@@ -90,11 +89,9 @@ mapLoop:
         addi t0, t0, 1      # increment the count
         bne t0, t2, mapLoop # repeat if we haven't reached the array size yet
 
-    	# wrong 4 :
         # la a0, 8(s0)        # load the address of the next node into a0
         lw a0, 8(s0)
 
-        # wrong 5 :
         # lw a1, 0(s1)        # put the address of the function back into a1 to prepare for the recursion
         mv a1, s1
 

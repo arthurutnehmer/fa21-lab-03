@@ -122,11 +122,13 @@ inc_arr_loop:
     # Hint: What does the "t" in "t0" stand for?
     # Also ask yourself this: why don't we need to preserve t1?
     #
-    addi sp,sp, -4
-    sw t0, 0(sp)
+    addi sp, sp, -4
+    sw t0,0(sp)
     jal helper_fn
     lw t0, 0(sp)
-    addi sp,sp, 4
+    addi sp, sp, 4
+
+
     # Finished call for helper_fn
     addi t0, t0, 1 # Increment counter
     j inc_arr_loop
@@ -149,12 +151,18 @@ inc_arr_end:
 # as appropriate.
 helper_fn:
     # BEGIN PROLOGUE
+    addi sp, sp, -8
+    sw t1, 0(sp)
+    sw s0, 4(sp)
     # END PROLOGUE
     add t1, x0,x0
     lw t1, 0(a0)
     addi s0, t1, 1
     sw s0, 0(a0)
     # BEGIN EPILOGUE
+    lw t1, 0(sp)
+    lw s0, 4(sp)
+    addi sp,sp, 8
     # END EPILOGUE
     ret
 
