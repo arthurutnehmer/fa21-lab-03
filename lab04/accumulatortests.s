@@ -34,13 +34,13 @@ print_int:
     li a0 1
     ecall
     jr ra
-    
+
 print_string:
 	mv a1 a0
     li a0 4
     ecall
     jr ra
-    
+
 exit:
     li a0 10
     ecall

@@ -76,8 +76,14 @@ main:
 # a1 is the address of the "output" array (defined above).
 # Think: why might having a1 be useful?
 f:
+	#set to mult by 4
+	add a2, x0, x0
+    addi a2, a2, 4
     # YOUR CODE GOES HERE!
-
+    addi a0, a0, 3
+    mul a0, a0, a2
+    add a1, a0, a1
+	lw a0, 0(a1)
     jr ra               # Always remember to jr ra after your function!
 
 print_int:
