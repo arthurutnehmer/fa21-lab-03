@@ -1,1 +1,1 @@
-java -jar logisim-evolution.jar
+#java -jar logisim-evolution.jar
