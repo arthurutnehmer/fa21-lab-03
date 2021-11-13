@@ -45,43 +45,31 @@ long long int sum_unrolled(int vals[NUM_ELEMS]) {
     return sum;
 }
 
-long long int sum_simd(int vals[NUM_ELEMS])
-{
+long long int sum_simd(int vals[NUM_ELEMS]) {
     clock_t start = clock();
     __m128i _127 = _mm_set1_epi32(127); // This is a vector with 127s in it... Why might you need this?
     long long int result = 0;                   // This is where you should put your final result!
     /* DO NOT MODIFY ANYTHING ABOVE THIS LINE (in this function) */
 
-    for(unsigned int w = 0; w < OUTER_ITERATIONS; w++)
-    {
+    for(unsigned int w = 0; w < OUTER_ITERATIONS; w++) {
         /* YOUR CODE GOES HERE */
-        int valid[4];
-        valid[0] = 0;
-        valid[1] = 0;
-        valid[2] = 0;
-        valid[3] = 0;
-
-        __m128i vsum = _mm_setzero_si128();
-
-        for (unsigned int i = 0; i < NUM_ELEMS; i += 4)
+        __m128i *vals2 = (__m128i *) vals;
+        __m128i res = _mm_setzero_si128( );
+        __m128i vals3 = _mm_setzero_si128( );
+        __m128i mask = _mm_setzero_si128( );
+        __m128i mask2 = _mm_setzero_si128( );
+        for(unsigned int i = 0; i < NUM_ELEMS; i+=4)
         {
-            __m128i vector = _mm_load_si128(&vals[i]);
-            vsum = _mm_add_epi32(vector, vsum);
+            vals3 = _mm_loadu_si128(vals2);
+            mask = _mm_cmpgt_epi32(vals3, _127);
+            mask2 = _mm_and_si128(mask, vals3);
+            res = _mm_add_epi32(res, mask2);
+            vals2 += sizeof(__m128i);
         }
-
-        _mm_storeu_si128((__m128i *)valid, vsum);
-        result += valid[0];
-        result += valid[1];
-        result += valid[2];
-        result += valid[3];
-
         /* Hint: you'll need a tail case. */
-        for (unsigned int i = NUM_ELEMS - (NUM_ELEMS % 4); i < NUM_ELEMS; i++)
-        {
-            result += vals[i];
-        }
+            _mm_storeu_si128((__m128i *) vals, res);
     }
-
+    result += sum_unrolled(vals);
     /* DO NOT MODIFY ANYTHING BELOW THIS LINE (in this function) */
     clock_t end = clock();
     printf("Time taken: %Lf s\n", (long double)(end - start) / CLOCKS_PER_SEC);
