@@ -45,16 +45,41 @@ long long int sum_unrolled(int vals[NUM_ELEMS]) {
     return sum;
 }
 
-long long int sum_simd(int vals[NUM_ELEMS]) {
+long long int sum_simd(int vals[NUM_ELEMS])
+{
     clock_t start = clock();
     __m128i _127 = _mm_set1_epi32(127); // This is a vector with 127s in it... Why might you need this?
     long long int result = 0;                   // This is where you should put your final result!
     /* DO NOT MODIFY ANYTHING ABOVE THIS LINE (in this function) */
 
-    for(unsigned int w = 0; w < OUTER_ITERATIONS; w++) {
+    for(unsigned int w = 0; w < OUTER_ITERATIONS; w++)
+    {
         /* YOUR CODE GOES HERE */
+        int valid[4];
+        valid[0] = 0;
+        valid[1] = 0;
+        valid[2] = 0;
+        valid[3] = 0;
+
+        __m128i vsum = _mm_setzero_si128();
+
+        for (unsigned int i = 0; i < NUM_ELEMS; i += 4)
+        {
+            __m128i vector = _mm_load_si128(&vals[i]);
+            vsum = _mm_add_epi32(vector, vsum);
+        }
+
+        _mm_storeu_si128((__m128i *)valid, vsum);
+        result += valid[0];
+        result += valid[1];
+        result += valid[2];
+        result += valid[3];
 
         /* Hint: you'll need a tail case. */
+        for (unsigned int i = NUM_ELEMS - (NUM_ELEMS % 4); i < NUM_ELEMS; i++)
+        {
+            result += vals[i];
+        }
     }
 
     /* DO NOT MODIFY ANYTHING BELOW THIS LINE (in this function) */

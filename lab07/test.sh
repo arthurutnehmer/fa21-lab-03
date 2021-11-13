@@ -1,2 +1,2 @@
-#make ex3
-./transpose 100000 33
+make ex3
+#./transpose 100000 33
