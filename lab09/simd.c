@@ -51,25 +51,37 @@ long long int sum_simd(int vals[NUM_ELEMS]) {
     long long int result = 0;                   // This is where you should put your final result!
     /* DO NOT MODIFY ANYTHING ABOVE THIS LINE (in this function) */
 
-    for(unsigned int w = 0; w < OUTER_ITERATIONS; w++) {
+    __m128i p = _mm_setzero_si128( );
+    for(unsigned int w = 0; w < OUTER_ITERATIONS; w++)
+    {
         /* YOUR CODE GOES HERE */
-        __m128i *vals2 = (__m128i *) vals;
-        __m128i res = _mm_setzero_si128( );
-        __m128i vals3 = _mm_setzero_si128( );
-        __m128i mask = _mm_setzero_si128( );
-        __m128i mask2 = _mm_setzero_si128( );
-        for(unsigned int i = 0; i < NUM_ELEMS; i+=4)
+        __m128i sum = _mm_setzero_si128( );
+        for(unsigned int i = 0; i<NUM_ELEMS/ 4 * 4 ;i+=4)
         {
-            vals3 = _mm_loadu_si128(vals2);
-            mask = _mm_cmpgt_epi32(vals3, _127);
-            mask2 = _mm_and_si128(mask, vals3);
-            res = _mm_add_epi32(res, mask2);
-            vals2 += sizeof(__m128i);
+            __m128i* h = (__m128i*)(vals+i);
+            p = _mm_loadu_si128( h );
+            __m128i flag = _mm_setzero_si128( );
+            flag = _mm_cmpgt_epi32( p, _127 );
+
+            __m128i anotherAddition = _mm_setzero_si128( );
+            anotherAddition = _mm_and_si128( p, flag );
+
+            sum = _mm_add_epi32(sum, anotherAddition);
         }
         /* Hint: you'll need a tail case. */
-            _mm_storeu_si128((__m128i *) vals, res);
+        int32_t *k = ( int *)&sum;
+        result = result + k[ 0 ] + k[ 1 ] + k[ 2 ] + k[ 3 ];
+        for ( unsigned  int i = NUM_ELEMS / 4 * 4 ; i <NUM_ELEMS; i++)
+        {
+            if (vals[i] >= 128 )
+            {
+                result += vals[i];
+            }
+
+        }
+
     }
-    result += sum_unrolled(vals);
+
     /* DO NOT MODIFY ANYTHING BELOW THIS LINE (in this function) */
     clock_t end = clock();
     printf("Time taken: %Lf s\n", (long double)(end - start) / CLOCKS_PER_SEC);
@@ -80,16 +92,54 @@ long long int sum_simd_unrolled(int vals[NUM_ELEMS]) {
     clock_t start = clock();
     __m128i _127 = _mm_set1_epi32(127);
     long long int result = 0;
-    /* DO NOT MODIFY ANYTHING ABOVE THIS LINE (in this function) */
-
     for(unsigned int w = 0; w < OUTER_ITERATIONS; w++) {
-        /* YOUR CODE GOES HERE */
-        /* Copy your sum_simd() implementation here, and unroll it */
+        int temp_arr[4];
+        __m128i sum = _mm_setzero_si128();      // returns a 128-bit zero vector
 
-        /* Hint: you'll need 1 or maybe 2 tail cases here. */
+        for (unsigned int i = 0; i < NUM_ELEMS / 16 * 16; i+=16) {
+            __m128i temp_vals, mask;
+
+            /* First Iteration */
+            temp_vals = _mm_loadu_si128((const __m128i_u *) &(vals[i]));
+            mask = _mm_cmpgt_epi32(temp_vals, _127);
+            temp_vals = _mm_and_si128(temp_vals, mask);
+
+            sum = _mm_add_epi32(sum, temp_vals);
+
+            /* Second Iteration */
+            temp_vals = _mm_loadu_si128((const __m128i_u *) &(vals[i + 4]));
+            mask = _mm_cmpgt_epi32(temp_vals, _127);
+            temp_vals = _mm_and_si128(temp_vals, mask);
+
+            sum = _mm_add_epi32(sum, temp_vals);
+
+            /* Third Iteration */
+            temp_vals = _mm_loadu_si128((const __m128i_u *) &(vals[i + 8]));
+            mask = _mm_cmpgt_epi32(temp_vals, _127);
+            temp_vals = _mm_and_si128(temp_vals, mask);
+
+            sum = _mm_add_epi32(sum, temp_vals);
+
+            /* Fourth Iteration */
+            temp_vals = _mm_loadu_si128((const __m128i_u *) &(vals[i + 12]));
+            mask = _mm_cmpgt_epi32(temp_vals, _127);
+            temp_vals = _mm_and_si128(temp_vals, mask);
+
+            sum = _mm_add_epi32(sum, temp_vals);
+        }
+        _mm_storeu_si128((__m128i_u *) temp_arr, sum);
+
+        for (int i = 0; i < 4; ++i) {
+            result += temp_arr[i];
+        }
+
+        /* Tail Case */
+        for (unsigned int i = NUM_ELEMS / 16 * 16; i < NUM_ELEMS; i++) {
+            if (vals[i] >= 128) {
+                result += vals[i];
+            }
+        }
     }
-
-    /* DO NOT MODIFY ANYTHING BELOW THIS LINE (in this function) */
     clock_t end = clock();
     printf("Time taken: %Lf s\n", (long double)(end - start) / CLOCKS_PER_SEC);
     return result;
