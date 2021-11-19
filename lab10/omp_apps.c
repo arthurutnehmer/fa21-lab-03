@@ -58,17 +58,17 @@ void v_add_optimized_chunks(double* x, double* y, double* z) {
         int number_of_threads = omp_get_num_threads();
         int size = ARRAY_SIZE/number_of_threads;
 
-        for(int x = thread_identifier*size; x<(thread_identifier+1) *size;i++)
+        for(int x = thread_identifier*size; x<(thread_identifier+1) *size;x++)
         {
-            z[i] = x[i] + y[i];
+            z[x] = x[x] + y[x];
         }
 
         int leftOver = ARRAY_SIZE % number_of_threads;
         if (leftOver != 0)
         {
-            for(int x = ARRAY_SIZE-leftOver;i<ARRAY_SIZE;i++)
+            for(int x = ARRAY_SIZE-leftOver;x<ARRAY_SIZE;x++)
             {
-                z[i] = x[i] + y[i];
+                z[x] = x[x] + y[x];
             }
         }
     }
