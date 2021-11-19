@@ -35,10 +35,25 @@ void v_add_naive(double* x, double* y, double* z) {
 void v_add_optimized_adjacent(double* x, double* y, double* z) {
     // TODO: Modify this function
     // Do NOT use the `for` directive here!
+    int thread_identifier = omp_get_thread_num();
+    int number_of_threads = omp_get_num_threads();
+    int size = ARRAY_SIZE/number_of_threads;
+    //Distribute threads over the array
     #pragma omp parallel
     {
-        for(int i=0; i<ARRAY_SIZE; i++)
+        for(int x = thread_identifier*size; x<(thread_identifier+1) *size;i++)
+        {
             z[i] = x[i] + y[i];
+        }
+
+        int leftOver = ARRAY_SIZE % number_of_threads;
+        if (leftOver != 0)
+        {
+            for(int x = ARRAY_SIZE-leftOver;i<ARRAY_SIZE;i++)
+            {
+                z[i] = x[i] + y[i];
+            }
+        }
     }
 }
 
